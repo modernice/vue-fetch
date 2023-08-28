@@ -1,7 +1,7 @@
 import type { MaybeRefOrGetter } from '@vueuse/core'
 import { toRef } from '@vueuse/core'
-import type { Ref } from '@vue/runtime-core'
-import { computed } from '@vue/runtime-core'
+import type { Ref, WatchStopHandle } from '@vue/runtime-core'
+import { computed, ref, watch } from '@vue/runtime-core'
 import { $fetch, Headers } from 'ofetch'
 import type {
   FetchError,
@@ -43,6 +43,7 @@ export interface FetchOptions {
    * specify the full URL individually.
    */
   baseUrl?: MaybeRefOrGetter<string>
+
   /**
    * Specifies the headers to be sent with the fetch request. This property
    * allows customization of the headers for each request, which can be useful
@@ -52,6 +53,7 @@ export interface FetchOptions {
    * a nullable property and can be undefined or null.
    */
   headers?: MaybeRefOrGetter<HeadersInit | null | undefined>
+
   /**
    * The `auth` property of `FetchOptions` represents the authentication headers
    * that can be used when making a fetch request. It accepts a value of type
@@ -61,6 +63,7 @@ export interface FetchOptions {
    * are merged with any base headers already defined in the fetch options.
    */
   auth?: FetchAuth
+
   /**
    * This property is an optional function that takes a {@link FetchError} as
    * its argument. If provided, it will be used to parse errors that occur
@@ -82,7 +85,18 @@ export interface FetchOptions {
  * it based on the provided error parsing logic.
  */
 export function defineFetch(options?: FetchOptions) {
-  const baseUrl = readonly(toRef(options?.baseUrl))
+  const providedBaseUrl = readonly(toRef(options?.baseUrl))
+  const baseUrl = ref(providedBaseUrl.value)
+
+  /**
+   * Sets the base URL. The fetch function will use this URL as the base for all
+   * subsequent fetch requests.
+   */
+  function setBaseUrl(url: string) {
+    baseUrl.value = url
+  }
+
+  watch(providedBaseUrl, (url) => setBaseUrl(url ?? ''))
 
   const baseHeaders = toRef(
     options?.headers ?? { ...defaultBaseHeaders },
@@ -122,6 +136,7 @@ export function defineFetch(options?: FetchOptions) {
 
     return {
       fetch,
+      setBaseUrl,
     }
   }
 }
