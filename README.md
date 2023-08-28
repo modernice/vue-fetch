@@ -1,9 +1,6 @@
 # vue-fetch
 
-> Centralized and reusable fetch functions for your Vue application.
-
 `vue-fetch` lets you define and reuse fetch composables seamlessly within your Vue apps. Built on top of [ofetch](unjs/ofetch).
-
 
 ## Installation
 
