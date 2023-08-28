@@ -1,0 +1,4 @@
+dist
+node_modules
+jotbot.env
+.DS_Store
