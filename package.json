@@ -1,6 +1,6 @@
 {
   "name": "@modernice/vue-fetch",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Multi-fetch setup for Vue apps",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
