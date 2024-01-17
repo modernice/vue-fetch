@@ -2,7 +2,7 @@ import type { MaybeRefOrGetter } from '@vueuse/core'
 import { toRef } from '@vueuse/core'
 import type { Ref } from '@vue/runtime-core'
 import { computed, ref, watch } from '@vue/runtime-core'
-import { $fetch, Headers } from 'ofetch'
+import _, { $fetch, Headers } from 'ofetch'
 import type {
   FetchError,
   FetchRequest,

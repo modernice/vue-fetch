@@ -1,4 +1,0 @@
-{
-  "extends": ["@antfu", "prettier"],
-  "ignorePatterns": ["**/dist/**", "**/node_modules/**"]
-}
