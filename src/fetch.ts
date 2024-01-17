@@ -1,6 +1,6 @@
 import type { MaybeRefOrGetter } from '@vueuse/core'
 import { toRef } from '@vueuse/core'
-import type { Ref, WatchStopHandle } from '@vue/runtime-core'
+import type { Ref } from '@vue/runtime-core'
 import { computed, ref, watch } from '@vue/runtime-core'
 import { $fetch, Headers } from 'ofetch'
 import type {
@@ -118,10 +118,10 @@ export function defineFetch(options?: FetchOptions) {
     return headers
   })
 
-  function createFetch() {
+  function createFetch(options?: { headers?: HeadersInit }) {
     return $fetch.create({
       baseURL: baseUrl.value,
-      headers: headers.value,
+      headers: options?.headers ?? headers.value,
     })
   }
 
@@ -137,6 +137,8 @@ export function defineFetch(options?: FetchOptions) {
     return {
       fetch,
       setBaseUrl,
+      createFetch,
+      headers,
     }
   }
 }
