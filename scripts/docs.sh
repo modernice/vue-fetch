@@ -24,6 +24,4 @@ set -a
 . "$ENV_FILE"
 set +a
 
-echo "Generating missing documentation ..."
-jotbot generate
-echo "Done."
+jotbot generate "$ROOT"

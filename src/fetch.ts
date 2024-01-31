@@ -33,7 +33,7 @@ export type FetchAuth = MaybeRefOrGetter<HeadersInit>
  * authorization headers. The `parseError` function can be used to customize how
  * fetch errors are handled and formatted.
  */
-export interface FetchOptions {
+export interface FetchOptions<TError extends Error = FetchError> {
   /**
    * The `baseUrl` property of `FetchOptions` is an optional reference or getter
    * function that returns a string. It defines the base URL for all fetch
@@ -72,7 +72,9 @@ export interface FetchOptions {
    * original error. This allows for more flexible and custom error handling
    * within the context of {@link FetchOptions}.
    */
-  parseError?: (error: FetchError) => string | Error
+  parseError?: (error: FetchError) => TError
+
+  onError?: (error: TError) => void
 }
 
 /**
@@ -130,7 +132,13 @@ export function defineFetch(options?: FetchOptions) {
       try {
         return await createFetch()(request, opts)
       } catch (e) {
-        throw options?.parseError ? options.parseError(e as FetchError) : e
+        const err = options?.parseError
+          ? options.parseError(e as FetchError)
+          : (e as FetchError)
+
+        options?.onError?.(err)
+
+        throw err
       }
     }
 
