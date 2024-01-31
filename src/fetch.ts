@@ -1,7 +1,7 @@
 import type { MaybeRefOrGetter } from '@vueuse/core'
 import { toRef } from '@vueuse/core'
 import type { Ref } from '@vue/runtime-core'
-import { computed, ref, watch } from '@vue/runtime-core'
+import { computed, ref, shallowRef, triggerRef, watch } from '@vue/runtime-core'
 import _, { $fetch, Headers } from 'ofetch'
 import type {
   FetchError,
@@ -100,7 +100,7 @@ export function defineFetch(options?: FetchOptions) {
 
   watch(providedBaseUrl, (url) => setBaseUrl(url ?? ''))
 
-  const baseHeaders = toRef(
+  const optsHeaders = toRef(
     options?.headers ?? { ...defaultBaseHeaders },
   ) as Ref<HeadersInit>
 
@@ -108,14 +108,18 @@ export function defineFetch(options?: FetchOptions) {
     HeadersInit | null | undefined
   >
 
+  const customHeaders = ref(new Headers())
+
   const headers = computed(() => {
-    const headers = new Headers({ ...baseHeaders.value })
+    const headers = new Headers({ ...optsHeaders.value })
 
     if (authHeadersInit.value) {
       new Headers(authHeadersInit.value).forEach((value, key) =>
         headers.set(key, value),
       )
     }
+
+    customHeaders.value.forEach((value, key) => headers.set(key, value))
 
     return headers
   })
@@ -146,6 +150,7 @@ export function defineFetch(options?: FetchOptions) {
       fetch,
       setBaseUrl,
       createFetch,
+      customHeaders,
       headers,
     }
   }
