@@ -1,15 +1,17 @@
 import type { MaybeRefOrGetter } from '@vueuse/core'
-import { toRef } from '@vueuse/core'
+import { toRef, toValue } from '@vueuse/core'
 import type { Ref } from '@vue/runtime-core'
-import { computed, ref, shallowRef, triggerRef, watch } from '@vue/runtime-core'
+import { computed, ref, watch } from '@vue/runtime-core'
 import _, { $fetch, Headers } from 'ofetch'
 import type {
   FetchError,
   FetchRequest,
+  MappedResponseType,
   FetchOptions as OFetchOptions,
+  ResponseType,
 } from 'ofetch'
-import { readonly } from '@vue/reactivity'
-import type { OFetchMappedType, OFetchResponseType } from './ofetch'
+
+// import type { OFetchMappedType, OFetchResponseType } from './ofetch'
 
 const defaultBaseHeaders = {
   'Content-Type': 'application/json' as const,
@@ -87,51 +89,46 @@ export interface FetchOptions<TError extends Error = FetchError> {
  * it based on the provided error parsing logic.
  */
 export function defineFetch(options?: FetchOptions) {
-  const providedBaseUrl = readonly(toRef(options?.baseUrl))
-  const baseUrl = ref(providedBaseUrl.value)
+  return () => {
+    const baseUrl = ref(toValue(options?.baseUrl ?? ''))
+    const optsHeaders = toRef(
+      options?.headers ?? { ...defaultBaseHeaders },
+    ) as Ref<HeadersInit>
+    const authHeadersInit = toRef(options?.auth) as Ref<
+      HeadersInit | null | undefined
+    >
+    const customHeaders = ref(new Headers())
 
-  /**
-   * Sets the base URL. The fetch function will use this URL as the base for all
-   * subsequent fetch requests.
-   */
-  function setBaseUrl(url: string) {
-    baseUrl.value = url
-  }
-
-  watch(providedBaseUrl, (url) => setBaseUrl(url ?? ''))
-
-  const optsHeaders = toRef(
-    options?.headers ?? { ...defaultBaseHeaders },
-  ) as Ref<HeadersInit>
-
-  const authHeadersInit = toRef(options?.auth) as Ref<
-    HeadersInit | null | undefined
-  >
-
-  const customHeaders = ref(new Headers())
-
-  const headers = computed(() => {
-    const headers = new Headers({ ...optsHeaders.value })
-
-    if (authHeadersInit.value) {
-      new Headers(authHeadersInit.value).forEach((value, key) =>
-        headers.set(key, value),
+    if (options?.baseUrl) {
+      watch(
+        () => toValue(options.baseUrl),
+        (url) => {
+          baseUrl.value = url ?? ''
+        },
       )
     }
 
-    customHeaders.value.forEach((value, key) => headers.set(key, value))
+    const headers = computed(() => {
+      const headers = new Headers({ ...optsHeaders.value })
 
-    return headers
-  })
+      if (authHeadersInit.value) {
+        new Headers(authHeadersInit.value).forEach((value, key) =>
+          headers.set(key, value),
+        )
+      }
 
-  function createFetch(options?: { headers?: HeadersInit }) {
-    return $fetch.create({
-      baseURL: baseUrl.value,
-      headers: options?.headers ?? headers.value,
+      customHeaders.value.forEach((value, key) => headers.set(key, value))
+
+      return headers
     })
-  }
 
-  return () => {
+    function createFetch(options?: { headers?: HeadersInit }) {
+      return $fetch.create({
+        baseURL: baseUrl.value,
+        headers: options?.headers ?? headers.value,
+      })
+    }
+
     const fetch: FetchFn = async (request, opts) => {
       try {
         return await createFetch()(request, opts)
@@ -148,10 +145,12 @@ export function defineFetch(options?: FetchOptions) {
 
     return {
       fetch,
-      setBaseUrl,
       createFetch,
       customHeaders,
       headers,
+      setBaseUrl: (url: string) => {
+        baseUrl.value = url
+      },
     }
   }
 }
@@ -164,7 +163,7 @@ export function defineFetch(options?: FetchOptions) {
  * type of data and response can be specified through the generic parameters T
  * and R, respectively. By default, T is any and R is 'json'.
  */
-export type FetchFn = <T = any, R extends OFetchResponseType = 'json'>(
+export type FetchFn = <TJsonType = any, R extends ResponseType = 'json'>(
   request: FetchRequest,
   options?: OFetchOptions<R>,
-) => Promise<OFetchMappedType<R, T>>
+) => Promise<MappedResponseType<R, TJsonType>>

@@ -1,25 +1,28 @@
 {
   "name": "@modernice/vue-fetch",
+  "type": "module",
   "version": "0.0.6",
   "description": "Multi-fetch setup for Vue apps",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "type": "module",
-  "files": [
-    "LICENSE",
-    "dist",
-    "package.json",
-    "README.md"
-  ],
+  "author": "Saman Hosseini <saman@modernice.ltd>",
+  "license": "MIT",
+  "keywords": [],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "require": "./dist/index.cjs",
-      "import": "./dist/index.mjs"
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
     },
     "./package.json": "./package.json"
   },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist",
+    "package.json"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -28,9 +31,14 @@
     "prepack": "pnpm build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "Saman Hosseini <saman@modernice.ltd>",
-  "license": "MIT",
+  "peerDependencies": {
+    "@vue/reactivity": "^3.0.0",
+    "@vue/runtime-core": "^3.0.0",
+    "@vueuse/core": "^10.4.1",
+    "@vueuse/shared": "^10.4.1",
+    "ofetch": "^1.1.1",
+    "vue": "^3.0.0"
+  },
   "devDependencies": {
     "@antfu/eslint-config": "^2.6.3",
     "@eslint/eslintrc": "^3.0.0",
@@ -47,13 +55,5 @@
     "vite-plugin-dts": "^3.7.1",
     "vue": "^3.4.14",
     "vue-demi": "^0.14.6"
-  },
-  "peerDependencies": {
-    "@vue/reactivity": "^3.0.0",
-    "@vue/runtime-core": "^3.0.0",
-    "@vueuse/core": "^10.4.1",
-    "@vueuse/shared": "^10.4.1",
-    "ofetch": "^1.1.1",
-    "vue": "^3.0.0"
   }
 }
