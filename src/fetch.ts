@@ -89,69 +89,67 @@ export interface FetchOptions<TError extends Error = FetchError> {
  * it based on the provided error parsing logic.
  */
 export function defineFetch(options?: FetchOptions) {
-  return () => {
-    const baseUrl = ref(toValue(options?.baseUrl ?? ''))
-    const optsHeaders = toRef(
-      options?.headers ?? { ...defaultBaseHeaders },
-    ) as Ref<HeadersInit>
-    const authHeadersInit = toRef(options?.auth) as Ref<
-      HeadersInit | null | undefined
-    >
-    const customHeaders = ref(new Headers())
+  const baseUrl = ref(toValue(options?.baseUrl ?? ''))
+  const optsHeaders = toRef(
+    options?.headers ?? { ...defaultBaseHeaders },
+  ) as Ref<HeadersInit>
+  const authHeadersInit = toRef(options?.auth) as Ref<
+    HeadersInit | null | undefined
+  >
+  const customHeaders = ref(new Headers())
 
-    if (options?.baseUrl) {
-      watch(
-        () => toValue(options.baseUrl),
-        (url) => {
-          baseUrl.value = url ?? ''
-        },
+  function setBaseUrl(url: string) {
+    baseUrl.value = url
+  }
+
+  if (options?.baseUrl) {
+    watch(
+      () => toValue(options.baseUrl),
+      (url) => setBaseUrl(url ?? ''),
+    )
+  }
+
+  const headers = computed(() => {
+    const headers = new Headers({ ...optsHeaders.value })
+
+    if (authHeadersInit.value) {
+      new Headers(authHeadersInit.value).forEach((value, key) =>
+        headers.set(key, value),
       )
     }
 
-    const headers = computed(() => {
-      const headers = new Headers({ ...optsHeaders.value })
+    customHeaders.value.forEach((value, key) => headers.set(key, value))
 
-      if (authHeadersInit.value) {
-        new Headers(authHeadersInit.value).forEach((value, key) =>
-          headers.set(key, value),
-        )
-      }
+    return headers
+  })
 
-      customHeaders.value.forEach((value, key) => headers.set(key, value))
-
-      return headers
+  function createFetch(options?: { headers?: HeadersInit }) {
+    return $fetch.create({
+      baseURL: baseUrl.value,
+      headers: options?.headers ?? headers.value,
     })
+  }
 
-    function createFetch(options?: { headers?: HeadersInit }) {
-      return $fetch.create({
-        baseURL: baseUrl.value,
-        headers: options?.headers ?? headers.value,
-      })
+  const fetch: FetchFn = async (request, opts) => {
+    try {
+      return await createFetch()(request, opts)
+    } catch (e) {
+      const err = options?.parseError
+        ? options.parseError(e as FetchError)
+        : (e as FetchError)
+
+      options?.onError?.(err)
+
+      throw err
     }
+  }
 
-    const fetch: FetchFn = async (request, opts) => {
-      try {
-        return await createFetch()(request, opts)
-      } catch (e) {
-        const err = options?.parseError
-          ? options.parseError(e as FetchError)
-          : (e as FetchError)
-
-        options?.onError?.(err)
-
-        throw err
-      }
-    }
-
-    return {
-      fetch,
-      createFetch,
-      customHeaders,
-      headers,
-      setBaseUrl: (url: string) => {
-        baseUrl.value = url
-      },
-    }
+  return {
+    fetch,
+    createFetch,
+    customHeaders,
+    headers,
+    setBaseUrl,
   }
 }
 
