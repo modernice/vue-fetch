@@ -1,7 +1,7 @@
 {
   "name": "@modernice/vue-fetch",
   "type": "module",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Multi-fetch setup for Vue apps",
   "author": "Saman Hosseini <saman@modernice.ltd>",
   "license": "MIT",
