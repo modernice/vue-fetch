@@ -123,33 +123,35 @@ export function defineFetch(options?: FetchOptions) {
     return headers
   })
 
-  function createFetch(options?: { headers?: HeadersInit }) {
-    return $fetch.create({
-      baseURL: baseUrl.value,
-      headers: options?.headers ?? headers.value,
-    })
-  }
-
-  const fetch: FetchFn = async (request, opts) => {
-    try {
-      return await createFetch()(request, opts)
-    } catch (e) {
-      const err = options?.parseError
-        ? options.parseError(e as FetchError)
-        : (e as FetchError)
-
-      options?.onError?.(err)
-
-      throw err
+  return () => {
+    function createFetch(options?: { headers?: HeadersInit }) {
+      return $fetch.create({
+        baseURL: baseUrl.value,
+        headers: options?.headers ?? headers.value,
+      })
     }
-  }
 
-  return {
-    fetch,
-    createFetch,
-    customHeaders,
-    headers,
-    setBaseUrl,
+    const fetch: FetchFn = async (request, opts) => {
+      try {
+        return await createFetch()(request, opts)
+      } catch (e) {
+        const err = options?.parseError
+          ? options.parseError(e as FetchError)
+          : (e as FetchError)
+
+        options?.onError?.(err)
+
+        throw err
+      }
+    }
+
+    return {
+      fetch,
+      createFetch,
+      customHeaders,
+      headers,
+      setBaseUrl,
+    }
   }
 }
 
